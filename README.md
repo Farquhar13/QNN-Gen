@@ -1,2 +1,2 @@
 # QNN-Gen
-Coming soon.
+Beta coming soon.
