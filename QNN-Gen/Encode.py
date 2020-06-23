@@ -333,3 +333,53 @@ class BinaryPhaseEncoding(Encode):
                         Sx.x((n_qubits-1)-i)
 
         return Sx
+
+
+class BasisEncoding(Encode):
+    """
+    Basis Encoding Class.
+
+    Encodes binary vectors (can be thought of as bit strings) into the state
+    with the corresponding label in Dirac notation.
+    """
+
+    def __init__(self):
+        pass
+
+    def n_qubits(self, x):
+        """
+        Input:
+            - x [np.ndarray]: The input data to encode
+
+        Returns:
+            - Number of qubits needed to encode x.
+        """
+
+        return len(x)
+
+    def circuit(self, x):
+        """
+        Input:
+            - x [np.ndarray]: The input data to encode
+
+        Returns:
+            - [qiskit.QuantumCircuit]: The circuit that encodes x
+
+        Assumptions:
+            - Assumes binary data with each feature in {0, 1}
+        """
+
+        assert (x.count(0) + x.count(1)) == len(x), "All features must be {0, 1}"
+
+
+        x = np.array(x)
+        x_reversed = x[::-1] # match Qiskit qubit ordering
+
+        n_qubits = self.n_qubits(x) # bit pedantic, but it's consistent with other classes
+        Sx = QuantumCircuit(n_qubits)
+
+        one_indices = np.where(x_reversed == 1)[0]
+        for i in one_indices:
+            Sx.x(i)
+
+        return Sx

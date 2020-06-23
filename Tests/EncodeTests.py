@@ -9,6 +9,7 @@ import numpy as np
 import qiskit
 from Utility import get_state_vector
 from Utility import Gate
+from Utility import get_counts
 from functools import reduce
 
 class TestEncode(unittest.TestCase):
@@ -182,6 +183,39 @@ class TestEncode(unittest.TestCase):
 
         all_true = reduce(lambda a, b: (a and b), equals_list)
         self.assertTrue(all_true)
+
+
+    def test_basis_encoding1(self):
+        """ n_qubits """
+
+        x = [1, 0, 0, 0, 1, 1, 1]
+        basis = Encode.BasisEncoding()
+        n_qubits = basis.n_qubits(x)
+
+        self.assertEqual(len(x), n_qubits, 'Error in n_qubits')
+
+    def test_basis_encoding2(self):
+        """ Default """
+
+        x = [1, 0, 0, 0, 1, 1, 1]
+        basis = Encode.BasisEncoding()
+        circuit = basis.circuit(x)
+        counts = get_counts(circuit)
+
+        key = None
+        value = None
+        for k,v in counts.items():
+            key = k
+
+        expected_dirac_label = '1000111'
+
+        self.assertEqual(len(counts.items()), 1)
+        self.assertEqual(key, expected_dirac_label)
+
+    def test_basis_encoding3(self):
+        """ Input validation """
+        pass
+
 
     """
     def test_list(self):

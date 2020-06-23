@@ -1,10 +1,28 @@
 import qiskit.circuit.library.standard_gates
 
+
 def get_state_vector(circuit):
-    backend = qiskit.Aer.get_backend("statevector_simulator")
-    psi = qiskit.execute(circuit, backend).result().get_statevector()
+    from qiskit import Aer
+    from qiskit import execute
+    """
+    import qiskit.Aer as Aer
+    import qiskit.execute as execute
+    """
+
+    backend = Aer.get_backend("statevector_simulator")
+    psi = execute(circuit, backend).result().get_statevector()
 
     return psi
+
+def get_counts(circuit):
+    from qiskit import Aer
+    from qiskit import execute
+
+    circuit.measure_all()
+    backend = Aer.get_backend("qasm_simulator")
+    counts = execute(circuit, backend).result().get_counts(circuit)
+
+    return counts
 
 class Gate:
     """
