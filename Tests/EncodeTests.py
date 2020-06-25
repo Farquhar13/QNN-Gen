@@ -212,9 +212,13 @@ class TestEncode(unittest.TestCase):
         self.assertEqual(len(counts.items()), 1)
         self.assertEqual(key, expected_dirac_label)
 
+
     def test_basis_encoding3(self):
-        """ Input validation """
-        pass
+        """ Input Validation """
+        x = [1, 0.5]
+        basis = Encode.BasisEncoding()
+
+        with self.assertRaises(AssertionError): basis.circuit(x)
 
 
     """
