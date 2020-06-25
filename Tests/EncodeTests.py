@@ -221,14 +221,5 @@ class TestEncode(unittest.TestCase):
         with self.assertRaises(AssertionError): basis.circuit(x)
 
 
-    """
-    def test_list(self):
-        l = [False, True]
-
-        all_true = reduce(lambda a, b: (a and b), l)
-        self.assertTrue(all_true)
-    """
-
-
 if __name__ == "__main__":
     unittest.main()
