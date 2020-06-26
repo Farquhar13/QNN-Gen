@@ -24,6 +24,17 @@ class Encode(ABC):
         pass
 
     def all_circuits(self, D):
+        """
+        Enocde a dataset. Returns a list of circuits. One for each data exmaple (row).
+
+        Input:
+            - D [np.npdarray]: A dataset. Rows represent data examples
+
+        Returns:
+            - [np.array[qiskit.QuantumCircuit]]: An array of Quantum Circuits.
+            The circuit at index i encodes data example at row i in D.
+        """
+
         circuit_list = []
 
         for x in D:
@@ -31,7 +42,18 @@ class Encode(ABC):
 
         return circuit_list
 
+    @staticmethod
+    def print_encoders():
+        """
+        Prints the available derived classes.
+        """
 
+        print("AngleEncoding \n",
+              "BasisEncoding \n",
+              "BinaryPhaseEncoding \n",
+              "DenseAngleEncoding \n")
+
+              
 # ------------> Angle Encoding <------------
 class AngleEncoding(Encode):
     """
@@ -41,8 +63,8 @@ class AngleEncoding(Encode):
     def __init__(self, gate=Gate.RY, scaling=np.pi/2):
         """
         Attributes:
-            gate=Gate.RY [Qiskit Gate]: The rotation gate
-            scaling=np.pi/2 [float]: Number by which to scale normalized input data.
+            - gate=Gate.RY [Qiskit Gate]: The rotation gate
+            - scaling=np.pi/2 [float]: Number by which to scale normalized input data.
             The defualt scaling is pi/2 which does not induce a relative phase
             difference.
         """
