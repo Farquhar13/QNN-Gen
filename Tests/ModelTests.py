@@ -4,12 +4,18 @@ sys.path.append('../QNN-Gen/')
 
 import Model
 import qiskit
+
 class TestModel(unittest.TestCase):
 
     def test_TTN_circuit(self):
         ttn = Model.TensorTreeNetwork(n_qubits=4)
         ttn_circuit = ttn.circuit()
         self.assertTrue(isinstance(ttn_circuit, qiskit.QuantumCircuit))
+
+    def test_BP_circuit(self):
+        bp = Model.BinaryPerceptron(n_qubits=4)
+        circuit = bp.circuit()
+        self.assertTrue(isinstance(circuit, qiskit.QuantumCircuit))
 
 if __name__ == "__main__":
     unittest.main()
