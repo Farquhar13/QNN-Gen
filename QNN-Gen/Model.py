@@ -22,7 +22,7 @@ class Model(ABC):
         """
         Attributes:
             - n_qubits [int]: Number of encoded qubits in the encoding circuit to be joined with
-            the model circuit
+            the model circuit. In other words, number of qubits not counting ancillary qubits.
             - params [np.ndarray]: The model's learnable parameters
         """
 
@@ -60,7 +60,7 @@ class Model(ABC):
               "BinaryPerceptron")
 
 
-class TensorTreeNetwork(Model):
+class TreeTensorNetwork(Model):
     """
     Class to implement Tensor Tree Networks.
 
@@ -109,7 +109,7 @@ class TensorTreeNetwork(Model):
                 import warnings
                 warnings.warn("""Number of quibts no longer match the number of parameters.
                               To update parameters use set_params(new_angles) or
-                              init_rand_angles(n_qubits).""")
+                              self.get_rand_angles(n_qubits).""")
 
 
     def get_rand_angles(self, n_qubits):
@@ -321,3 +321,108 @@ class BinaryPerceptron(Model):
                                  labels=[1, 0])
 
         return pt
+
+
+class EntangledQubit(Model):
+    """
+    Class to an engtangled qubit classifier.
+    """
+
+    def __init__(self,
+        n_qubits=None,
+        angles=None,
+        n_layers=3,
+        gate_set=[Gate.RXX, Gate.RZX]):
+        """
+        Inputs:
+            - n_qubits=None (int): Number of encoded qubits
+            - anlges=None (list): Parameters for rotation gate
+            - gate_set=[Gate.RXX, Gate.RZX] (list(qiskit gates)): Parameterized two qubit
+            gates teo use. self.circuit() loop through the list of gates and repeat until
+            n_layers have been constructed.
+        """
+
+        self.n_layers = n_layers
+        self.measurement_qubit = 0
+        self.parameters = angles
+        if angles is None:
+            self.n_parameters = None
+        else:
+            self.n_parameters = len(angles)
+        self.n_qubits = n_qubits # may update attributes above
+        self.gate_list = gate_set
+
+    @property
+    def n_qubits(self):
+        return self._n_qubits
+
+    @n_qubits.setter
+    def n_qubits(self, n_qubits):
+        """
+        Sets self.n_qubits. Assumes n_qubits is a power of two.
+
+        Also may update self.n_layers, self.measurement_qubit, and self.angles
+        """
+
+        assert np.log2(n_qubits) % 1 == 0, "Assumes n_qubits is a power of two."
+        self._n_qubits = n_qubits
+
+        if self.parameters is None:
+            self.n_parameters = (n_qubits - 1) * self.n_layers
+            self.parameters = self.get_rand_angles(self.n_parameters)
+        else:
+            if int(2**(self.n_layers + 1)) != len(self.parameters):
+                import warnings
+                warnings.warn("""Number of quibts no longer match the number of parameters.
+                              To update parameters use set_params(new_angles) or
+                              self.get_rand_angles(n_qubits).""")
+
+    def get_rand_angles(self, n_parameters):
+        """
+        Generates random numbers from [0, 2*pi)
+        """
+
+        rand_angles = np.random.uniform(0, 2*np.pi, n_parameters)
+
+        return rand_angles
+
+    def circuit(self):
+        """
+        Returns:
+            - qiskit.QuantumCircuit
+        """
+
+        qc = QuantumCircuit(self.n_qubits)
+        qubit_idx_list = list(range(self.n_qubits))
+        print("A", self.n_layers)
+        for layer_idx in range(self.n_layers):
+            # Loop through gate list, return to beginning after end of the list
+            gate = self.gate_list[layer_idx % len(self.gate_list)]
+
+            for gate_idx in range(1, self.n_qubits):
+                gate_parameter = self.parameters[layer_idx + gate_idx]
+                qc.append(gate(gate_parameter), [self.measurement_qubit, gate_idx])
+
+        return qc
+
+    def default_measurement(self, observable=None, measurement_qubit=None):
+        """
+        Default measurement is the Z expectation of the measurement_qubit
+
+        Inputs:
+            - observable=None [Observable]: If None, defaults to Observable.Y()
+            - measurement_qubit [int]: If None, defaults to self.measurement_qubit,
+            which itself defaults to qubit 0.
+
+        Returns:
+            - Expectation() measurement object
+        """
+        if observable is None:
+            observable = Observable.Y()
+
+        if measurement_qubit is None:
+            measurement_qubit = self.measurement_qubit
+
+        expectation = Expectation(measurement_qubit, observable)
+
+        return expectation
