@@ -2,23 +2,35 @@ import qiskit.circuit.library.standard_gates
 
 
 def get_state_vector(circuit):
+    """
+    Input:
+        - circuit (qiskit.QuantumCircuit)
+    Returns:
+        - state vector
+    """
     from qiskit import Aer
     from qiskit import execute
-    """
-    import qiskit.Aer as Aer
-    import qiskit.execute as execute
-    """
 
     backend = Aer.get_backend("statevector_simulator")
     psi = execute(circuit, backend).result().get_statevector()
 
     return psi
 
-def get_counts(circuit):
+def get_counts(circuit, measure_all=True):
+    """
+    Input:
+        - circuit (qiskit.QuantumCircuit)
+        - measure_all=True (boolean): If true, adds measurement operations and corresponding
+        classical registers for all qubits
+    Returns:
+        - dictionary of counts
+    """
     from qiskit import Aer
     from qiskit import execute
 
-    circuit.measure_all()
+    if measure_all == True:
+        circuit.measure_all()
+
     backend = Aer.get_backend("qasm_simulator")
     counts = execute(circuit, backend).result().get_counts(circuit)
 
@@ -106,10 +118,10 @@ class Gate:
     H = qiskit.circuit.library.standard_gates.HGate()
 
     # Phase
-    S = qiskit.circuit.library.standard_gates.SGate() # ~Z**0.5
+    S = qiskit.circuit.library.standard_gates.SGate() # ~=Z**0.5
     Sdg = qiskit.circuit.library.standard_gates.SdgGate()
 
-    T = qiskit.circuit.library.standard_gates.TGate() # ~Z**0.25
+    T = qiskit.circuit.library.standard_gates.TGate() # ~=Z**0.25
     Tdg = qiskit.circuit.library.standard_gates.TdgGate()
 
     # Puali Rotations
@@ -126,5 +138,8 @@ class Gate:
     CX = qiskit.circuit.library.standard_gates.CXGate()
     CY = qiskit.circuit.library.standard_gates.CYGate()
     CZ = qiskit.circuit.library.standard_gates.CZGate()
+
+    RXX = lambda theta : qiskit.circuit.library.standard_gates.RXXGate(theta)
+    RZX = lambda theta : qiskit.circuit.library.standard_gates.RZXGate(theta)
 
     swap = qiskit.circuit.library.standard_gates.SwapGate()
