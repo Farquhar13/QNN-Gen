@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from qiskit import QuantumCircuit, QuantumRegister
 import qiskit
 import numpy as np
-
 from Utility import Gate
 
 
@@ -96,6 +95,10 @@ class TreeTensorNetwork(Model):
         Also may update self.n_layers, self.measurement_qubit, and self.angles
         """
 
+        if n_qubits == None:
+            self._n_qubits = None
+            return
+
         assert np.log2(n_qubits) % 1 == 0, "Assumes n_qubits is a power of two."
         self._n_qubits = n_qubits
 
@@ -175,6 +178,9 @@ class TreeTensorNetwork(Model):
         Returns:
             - Expectation() measurement object
         """
+        from Observable import Observable
+        from Measurement import Expectation
+
         if observable is None:
             observable = Observable.Z()
 
@@ -224,6 +230,11 @@ class BinaryPerceptron(Model):
         Also may update self.n_layers, self.measurement_qubit, and self.angles
         """
 
+        if n_qubits == None:
+            self._n_qubits = None
+            return
+
+        n_qubits -= 1 # Not counting ancilla
         assert np.log2(n_qubits) % 1 == 0, "Assumes n_qubits is a power of two."
         self._n_qubits = n_qubits
 
@@ -261,7 +272,7 @@ class BinaryPerceptron(Model):
         basis_labels = [("{:0%db}"%N).format(k) for k in range(len(w))]
 
         # No need for ancilla if N = 1
-        if N ==1:
+        if N == 1:
             Sx = QuantumCircuit(N)
             qubit_ancilla_idx_list = qubit_idx_list
 
@@ -315,6 +326,8 @@ class BinaryPerceptron(Model):
             - ProbabilityThreshold Measurement object.
         """
 
+        from Measurement import ProbabilityThreshold
+
         pt = ProbabilityThreshold(qubits=self.measurement_qubit,
                                  p_zero=False,
                                  threshold=0.5,
@@ -363,6 +376,10 @@ class EntangledQubit(Model):
 
         Also may update self.n_layers, self.measurement_qubit, and self.angles
         """
+
+        if n_qubits == None:
+            self._n_qubits = None
+            return
 
         assert np.log2(n_qubits) % 1 == 0, "Assumes n_qubits is a power of two."
         self._n_qubits = n_qubits
@@ -417,6 +434,9 @@ class EntangledQubit(Model):
         Returns:
             - Expectation() measurement object
         """
+        from Observable import Observable
+        from Measurement import Expectation
+
         if observable is None:
             observable = Observable.Y()
 

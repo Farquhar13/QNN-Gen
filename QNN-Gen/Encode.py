@@ -53,7 +53,7 @@ class Encode(ABC):
               "BinaryPhaseEncoding \n",
               "DenseAngleEncoding \n")
 
-              
+
 # ------------> Angle Encoding <------------
 class AngleEncoding(Encode):
     """
@@ -391,7 +391,10 @@ class BasisEncoding(Encode):
             - Assumes binary data with each feature in {0, 1}
         """
 
-        assert (x.count(0) + x.count(1)) == len(x), "All features must be {0, 1}"
+        if isinstance(x, list):
+            x = np.array(x)
+
+        assert (np.count_nonzero(x == 0) + np.count_nonzero(x == 1)) == len(x), "All features must be {0, 1}"
 
 
         x = np.array(x)

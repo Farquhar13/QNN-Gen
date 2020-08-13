@@ -240,11 +240,11 @@ class Probability(Measurement):
         self.p_zero = p_zero
 
         if observable_basis is not None:
-            rotate_basis = True
+            requires_rotation = True
         else:
-            rotate_basis = False
+            requires_rotation = False
 
-        super().__init__(qubits=self.qubits, rotate=rotate_basis)
+        super().__init__(qubits=self.qubits, rotate=requires_rotation)
 
 
     def rotate_basis(self, circuit, qubit=None, observable_basis=None):
@@ -332,11 +332,11 @@ class ProbabilityThreshold(Measurement):
             self.labels = labels
 
         if observable_basis is not None:
-            rotate_basis = True
+            requires_rotation = True
         else:
-            rotate_basis = False
+            requires_rotation = False
 
-        super().__init__(qubits=self.qubits, rotate=rotate_basis)
+        super().__init__(qubits=self.qubits, rotate=requires_rotation)
 
 
     def rotate_basis(self, circuit, qubit=None, observable_basis=None):
@@ -394,11 +394,11 @@ class Expectation(Measurement):
             raise ValueError("Observable argument is not a correct type. Check the __init__ docstring.")
 
         if self.observable.name == "Z":
-            self.rotate_basis = False
+            requires_rotation = False
         else:
-            self.rotate_basis = True
+            requires_rotation = True
 
-        super().__init__(qubits=self.qubits, rotate=self.rotate_basis)
+        super().__init__(qubits=self.qubits, rotate=requires_rotation)
 
     def rotate_basis(self, circuit, qubit=None, observable=None):
         """

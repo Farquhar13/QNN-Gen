@@ -17,17 +17,22 @@ def combine(x, encoder, model, measurement=None):
 
     encode_circuit = encoder.circuit(x)
     if model.n_qubits == None:
-        model.n_qubits = encoder.n_qubits
+        model.n_qubits = encoder.n_qubits(x)
     model_circuit = model.circuit()
     if measurement == None:
-        measurement = model.default_measuremnt()
+        measurement = model.default_measurement()
+
+    print("ENCODE")
+    print(encode_circuit)
+    print("MODEL")
+    print(model_circuit)
 
     # Combine circuits
-    full_circuit = qiskit.combine(encode_circuit, model_circuit)
+    full_circuit = QuantumCircuit.combine(encode_circuit, model_circuit)
 
     # Rotate basis
-    if measurement.rotate_basis == True:
-        measument.rotate_basis(full_circuit)
+    if measurement.rotate == True:
+        measurement.rotate_basis(full_circuit)
 
     # Add classical registers and measurement operations
     measurement.add_measurements(full_circuit, measurement.qubits)
