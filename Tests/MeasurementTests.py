@@ -4,9 +4,11 @@ import sys
 sys.path.append('../QNN-Gen/')
 import numpy as np
 import qiskit
-import Measurement
 from Measurement import Measurement
+from Measurement import Probability
 import Utility
+from math import isclose
+from Observable import Observable
 
 class TestMeasurement(unittest.TestCase):
 
@@ -93,9 +95,129 @@ class TestMeasurement(unittest.TestCase):
 
         Measurement.add_measurements(qc, [0], [0], add_classical_register=False)
         counts = Utility.get_counts(qc, measure_all=False)
-        print(qc)
-        print(counts)
         self.assertTrue(counts['1'] == 1024)
+
+    def test_rotate_basis1(self):
+        """ Z """
+        qc = qiskit.QuantumCircuit(1)
+        Z = Observable.Z()
+        Measurement.rotate_basis(qc, [0], Z)
+        sv = Utility.get_state_vector(qc)
+        self.assertTrue(np.allclose([1, 0], sv))
+
+    def test_rotate_basis2(self):
+        """ X """
+        qc = qiskit.QuantumCircuit(1)
+        qc.h(0) # Rotate onto eigenvector of x w/ e.value 1
+        X = Observable.X()
+        Measurement.rotate_basis(qc, [0], X)
+        sv = Utility.get_state_vector(qc)
+
+        qc1 = qiskit.QuantumCircuit(1)
+        qc1.x(0)
+        qc1.h(0) # Rotate onto eigenvector of x with e.value -1
+        Measurement.rotate_basis(qc1, [0], X)
+        sv1 = Utility.get_state_vector(qc1)
+        result = np.allclose([1, 0], sv) and np.allclose([0, 1], sv1)
+        self.assertTrue(result)
+
+    def test_rotate_basis3(self):
+        """ Y """
+        qc = qiskit.QuantumCircuit(1)
+        qc.rx(-np.pi/2, 0) # Rotate onto y axis
+        Y = Observable.Y()
+        Measurement.rotate_basis(qc, [0], Y)
+        sv = Utility.get_state_vector(qc)
+
+        qc1 = qiskit.QuantumCircuit(1)
+        qc1.rx(np.pi/2, 0) # Rotate onto negative y axis
+        Measurement.rotate_basis(qc1, [0], Y)
+        sv1 = Utility.get_state_vector(qc1)
+
+        result = np.allclose([1, 0], sv) and np.allclose([0, 1], sv1)
+        self.assertTrue(result)
+
+    def test_rotate_basis4(self):
+        """
+        Make sure eigenvlaues of H Observable get rotated to computational
+        basis by rotate basis.
+        """
+        qc = qiskit.QuantumCircuit(1)
+        H = Observable.H()
+        qc.initialize(H.eigenvectors[0], [0])
+        Measurement.rotate_basis(qc, [0], H)
+        sv = Utility.get_state_vector(qc)
+
+        qc1 = qiskit.QuantumCircuit(1)
+        qc1.initialize(H.eigenvectors[1], [0])
+        Measurement.rotate_basis(qc1, [0], H)
+        sv1 = Utility.get_state_vector(qc1)
+        result = np.allclose([1, 0], sv) and (np.allclose([0, 1], sv1))
+        self.assertTrue(result)
+
+    def test_rotate_basis5(self):
+        """ Testing arbitary observable functionality (X) """
+        X = np.array([[0, 1],
+                      [1, 0]])
+        X_obs = Observable(X)
+
+        qc = qiskit.QuantumCircuit(1)
+        qc.h(0)
+        Measurement.rotate_basis(qc, [0], X_obs)
+        sv = Utility.get_state_vector(qc)
+
+        qc1 = qiskit.QuantumCircuit(1)
+        qc1.x(0)
+        qc1.h(0) # Rotate onto eigenvector of x with e.value -1
+        Measurement.rotate_basis(qc1, [0], X_obs)
+        sv1 = Utility.get_state_vector(qc1)
+
+        expected = np.allclose(Measurement.born_rule(sv[0]), 1)
+        expected1 = np.allclose(Measurement.born_rule(sv1[1]), 1)
+        self.assertTrue(expected and expected1)
+
+    def test_rotate_basis6(self):
+        """ Testing arbitary observable functionality (Y) """
+        Y = np.array([[0, -1j],
+                      [1j, 0]])
+        Y_obs = Observable(Y)
+        qc = qiskit.QuantumCircuit(1)
+        qc.rx(-np.pi/2, [0])
+        Measurement.rotate_basis(qc, [0], Y_obs)
+        sv = Utility.get_state_vector(qc)
+
+        qc1 = qiskit.QuantumCircuit(1)
+        qc1.rx(np.pi/2, 0) # Rotate onto negative y axis
+        Measurement.rotate_basis(qc1, [0], Y_obs)
+        sv1 = Utility.get_state_vector(qc1)
+
+        expected = np.allclose(Measurement.born_rule(sv[0]), 1)
+        expected1 = np.allclose(Measurement.born_rule(sv1[1]), 1)
+        self.assertTrue(expected and expected1)
+
+    def test_probability1(self):
+        """ Default arguments """
+        qc = qiskit.QuantumCircuit(1)
+        qc.h(0)
+
+        Measurement.add_measurements(qc, [0])
+        counts = Utility.get_counts(qc)
+
+        Prob = Probability(0)
+        result = Prob.output(counts)
+        self.assertTrue(isclose(0.5, result[0], abs_tol=5e-2))
+
+    def test_probability2(self):
+        """ p_zero=False """
+        qc = qiskit.QuantumCircuit(1)
+        qc.x(0)
+
+        Measurement.add_measurements(qc, [0])
+        counts = Utility.get_counts(qc)
+
+        Prob = Probability([0], p_zero=False)
+        result = Prob.output(counts)
+        self.assertTrue(1 == result[0])
 
 if __name__ == "__main__":
     unittest.main()

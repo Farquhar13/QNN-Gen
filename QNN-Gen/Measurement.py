@@ -13,6 +13,12 @@ class Measurement(ABC):
     """
 
     def __init__(self, qubits, rotate=False):
+        """
+        Attributes:
+            - self.qubits ([list, np.array]): The qubits to be measured
+            - self.rotate=False (boolean): True if the measurement is performed
+            with respect to a basis other than the computational basis
+        """
         self.qubits = qubits
         self.rotate = rotate
 
@@ -147,18 +153,21 @@ class Measurement(ABC):
             circuit.h(qubit)
 
         elif observable.name == "Y":
-            circuit.z(qubit)
-            circuit.s(qubit)
+            # Alternative is the commented version
+            #circuit.z(qubit)
+            #circuit.s(qubit)
+            #circuit.h(qubit)
+            circuit.sdg(qubit)
             circuit.h(qubit)
 
         elif observable.name == "Z":
             pass
 
         elif observable.name == "H":
-            circuit.ry(-np.pi/4, qubit)
+            circuit.ry(np.pi/4, qubit)
 
         else:
-            circuit.unitary(observable.matrix, qubit)
+            circuit.unitary(observable.eigenvectors.T.conj(), qubit)
 
 
     @staticmethod
@@ -226,7 +235,7 @@ class Probability(Measurement):
     def __init__(self, qubits, p_zero=True, observable_basis=None):
         """
         Attributes:
-            - qubits Union[int, list]: qubit index  or list of qubit indices
+            - qubits Union[int, list, np.ndarray]: qubit index  or list of qubit indices
             - observable_basis [Observable]: The observable corresponding the basis to measure in
             - zero=True [Boolean]: If True, output returns probabilties of qubit being measured in the |0> state.
             If false, output returns probabilties of qubit being measured in the |1> state.

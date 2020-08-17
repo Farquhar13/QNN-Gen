@@ -40,6 +40,7 @@ class Observable():
             self.eigenvalues = e_vals
 
         if set_vectors == True:
+            #e_vecs = 1/np.sqrt(2) * np.array([[1, 1], [1, -1]])
             self.eigenvectors = e_vecs
 
 
@@ -50,9 +51,8 @@ class Observable():
 
         e_vals = np.array([1, -1])
 
-
-        e_vecs = 1/np.sqrt(2) * np.array([[1, -1],
-                                          [1, 1]])
+        e_vecs = 1/np.sqrt(2) * np.array([[1, 1],
+                                          [1, -1]])
 
         return Observable(matrix=X_matrix, name="X", eigenvalues=e_vals, eigenvectors=e_vecs)
 
@@ -64,9 +64,8 @@ class Observable():
 
         e_vals = np.array([1, -1])
 
-
-        e_vecs = 1/np.sqrt(2) * np.array([[-1, -1],
-                                          [-1j, 1j]])
+        e_vecs = 1/np.sqrt(2) * np.array([[-1j, 1],
+                                          [1, -1j]])
 
         return Observable(matrix=Y_matrix, name="Y", eigenvalues=e_vals, eigenvectors=e_vecs)
 
