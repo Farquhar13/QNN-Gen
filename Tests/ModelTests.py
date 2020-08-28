@@ -8,17 +8,17 @@ import qiskit
 class TestModel(unittest.TestCase):
 
     def test_TTN_circuit(self):
-        ttn = Model.TreeTensorNetwork(n_qubits=4)
+        ttn = Model.TreeTensorNetwork(n_qubits=8)
         ttn_circuit = ttn.circuit()
         self.assertTrue(isinstance(ttn_circuit, qiskit.QuantumCircuit))
 
     def test_BP_circuit(self):
-        bp = Model.BinaryPerceptron(n_qubits=4)
+        bp = Model.BinaryPerceptron(n_qubits=8)
         circuit = bp.circuit()
         self.assertTrue(isinstance(circuit, qiskit.QuantumCircuit))
 
     def test_ET(self):
-        et = Model.EntangledQubit(n_qubits=4)
+        et = Model.EntangledQubit(n_qubits=8)
         circuit = et.circuit()
         #print(circuit)
         self.assertTrue(isinstance(circuit, qiskit.QuantumCircuit))

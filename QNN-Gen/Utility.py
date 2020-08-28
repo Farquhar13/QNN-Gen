@@ -1,5 +1,6 @@
 import qiskit.circuit.library.standard_gates
-
+from qiskit import Aer
+from qiskit import execute
 
 def get_state_vector(circuit):
     """
@@ -8,9 +9,6 @@ def get_state_vector(circuit):
     Returns:
         - state vector
     """
-    from qiskit import Aer
-    from qiskit import execute
-
     backend = Aer.get_backend("statevector_simulator")
     psi = execute(circuit, backend).result().get_statevector()
 
@@ -25,9 +23,6 @@ def get_counts(circuit, measure_all=True):
     Returns:
         - dictionary of counts
     """
-    from qiskit import Aer
-    from qiskit import execute
-
     if measure_all == True:
         circuit.measure_all()
 

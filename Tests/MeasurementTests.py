@@ -4,8 +4,7 @@ import sys
 sys.path.append('../QNN-Gen/')
 import numpy as np
 import qiskit
-from Measurement import Measurement
-from Measurement import Probability
+from Measurement import *
 import Utility
 from math import isclose
 from Observable import Observable
@@ -196,12 +195,12 @@ class TestMeasurement(unittest.TestCase):
         self.assertTrue(expected and expected1)
 
     def test_probability1(self):
-        """ Default arguments """
+        """ Default arguments. Note: test may fail probabilistically when there is no error."""
         qc = qiskit.QuantumCircuit(1)
         qc.h(0)
 
         Measurement.add_measurements(qc, [0])
-        counts = Utility.get_counts(qc)
+        counts = Utility.get_counts(qc, measure_all=False)
 
         Prob = Probability(0)
         result = Prob.output(counts)
@@ -213,11 +212,106 @@ class TestMeasurement(unittest.TestCase):
         qc.x(0)
 
         Measurement.add_measurements(qc, [0])
-        counts = Utility.get_counts(qc)
+        counts = Utility.get_counts(qc, measure_all=False)
 
         Prob = Probability([0], p_zero=False)
         result = Prob.output(counts)
         self.assertTrue(1 == result[0])
+
+    def test_probability3(self):
+        """ observable_basis. Note: test may fail probabilistically when there is no error. """
+        qc = qiskit.QuantumCircuit(1)
+        X_obs = Observable.X()
+        prob = Probability([0], observable=X_obs)
+        prob.rotate_basis(qc)
+        counts = Utility.get_counts(qc)
+        result = prob.output(counts)
+        self.assertTrue(isclose(0.5, result[0], abs_tol=5e-2))
+
+    def test_probability_threshold1(self):
+        qc = qiskit.QuantumCircuit(1)
+        counts = Utility.get_counts(qc)
+        pt = ProbabilityThreshold(0)
+        result = pt.output(counts)
+        self.assertTrue(result[0] == 0)
+
+    def test_probability_threshold2(self):
+        """ p_zero=False w/ labels """
+        qc = qiskit.QuantumCircuit(1)
+        counts = Utility.get_counts(qc)
+        pt = ProbabilityThreshold(0, p_zero=False, labels=['a', 'b'])
+        result = pt.output(counts)
+        self.assertTrue(result[0] == 'b')
+
+    def test_probability_threshold3(self):
+        """ threshold """
+        qc = qiskit.QuantumCircuit(1)
+        qc.h(0)
+        counts = Utility.get_counts(qc)
+        pt = ProbabilityThreshold(0, threshold=0.75)
+        result = pt.output(counts)
+        self.assertTrue(result[0] == 1)
+
+    def test_probability_threshold4(self):
+        """ rotate_basis """
+        qc = qiskit.QuantumCircuit(1)
+        qc.x(0)
+        qc.h(0)
+        X_obs = Observable.X()
+        pt = ProbabilityThreshold(0, observable=X_obs)
+        pt.rotate_basis(qc)
+        counts = Utility.get_counts(qc)
+        result = pt.output(counts)
+        self.assertTrue(result[0] == 1)
+
+    def test_expectation1(self):
+        """ Z """
+        qc = qiskit.QuantumCircuit(1)
+        exp = Expectation(0)
+        counts = Utility.get_counts(qc)
+        result = exp.output(counts)
+        expected = [1]
+        is_correct = (result == expected)
+
+        qc1 = qiskit.QuantumCircuit(1)
+        qc1.x(0)
+        counts1 = Utility.get_counts(qc1)
+        result1 = exp.output(counts1)
+        expected1 = [-1]
+        is_correct1 = (result1 == expected1)
+        self.assertTrue(is_correct and is_correct1)
+
+    def test_expectation2(self):
+        """ Y """
+        qc = qiskit.QuantumCircuit(1)
+        qc.rx(-np.pi/2, 0)
+        Y_obs = Observable.Y()
+        exp = Expectation(0, observable=Y_obs)
+        exp.rotate_basis(qc)
+        counts = Utility.get_counts(qc)
+        result = exp.output(counts)
+        expected = [1]
+        is_correct = (result == expected)
+
+        qc1 = qiskit.QuantumCircuit(1)
+        qc1.rx(np.pi/2, 0)
+        exp.rotate_basis(qc1)
+        counts1 = Utility.get_counts(qc1)
+        result1 = exp.output(counts1)
+        expected1 = [-1]
+        is_correct1 = (result1 == expected1)
+        self.assertTrue(is_correct and is_correct1)
+
+    def test_expectation2(self):
+        """ qubit """
+        qc = qiskit.QuantumCircuit(2)
+        qc.h(0)
+        exp = Expectation(1)
+        exp.rotate_basis(qc)
+        counts = Utility.get_counts(qc)
+        result = exp.output(counts)
+        expected = [1]
+        is_correct = (result == expected)
 
 if __name__ == "__main__":
     unittest.main()

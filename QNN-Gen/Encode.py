@@ -144,8 +144,7 @@ class DenseAngleEncoding(Encode):
         Attributes:
             gate=Gate.RY [Qiskit Gate]: The rotation gate
             scaling=np.pi/2 [float]: Number by which to scale normalized input data.
-            The defualt scaling is pi/2 which does not induce a relative phase
-            difference.
+            The defualt scaling is pi/2 which does not induce a relative phase.
         """
 
         self.rotation_gate = rotation_gate
@@ -241,23 +240,24 @@ class BinaryPhaseEncoding(Encode):
         self.method = method
         self.ancilla = ancilla
 
-    def n_qubits(self, x):
+    def n_qubits(self, x, plus_ancilla=False):
         """
         Input:
-            - x [np.ndarray]: The input data to encode
+            - x (np.ndarray): The input data to encode
+            - plus_ancilla=False (Boolean): Count ancilla qubits if self.ancilla=True
 
         Returns:
             - Number of qubits needed to encode x. Includes ancilla qubit if
-            self.ancilla is true
+            self.ancilla is true and plus_ancilla=True
 
-        Assumes the number of features in x is a power of 2
+        Assumes the number of features in x is a power of 2.
         """
 
         assert_string = "BinaryPhaseEncoding assumes the number of features in x is a power of 2"
         assert np.log2(len(x)) % 1 == 0, assert_string
 
         n_qubits = int(np.log2(len(x)))
-        if self.ancilla == True:
+        if self.ancilla == True and plus_ancilla == True:
             n_qubits += 1
 
         return n_qubits
@@ -266,8 +266,9 @@ class BinaryPhaseEncoding(Encode):
     def circuit(self, x, ancilla=None):
         """
         Input:
-            - x [np.ndarray]: The input data to encode
-            - ancilla=True [Boolean]: Adds an ancillary qubit to the circuit, if true
+            - x [np.ndarray]: The input data to encode.
+            - ancilla=None [Boolean]: If None, uses self.ancilla.
+            Adds an ancillary qubit to the circuit, if true.
 
         Returns:
             - [qiskit.QuantumCircuit]: The circuit that encodes x
@@ -307,17 +308,11 @@ class BinaryPhaseEncoding(Encode):
             case for your data, consider appending zeros.
         """
 
-        # Validate input
-        """
-        assert_string = "Elements of x vector must be either -1 or 1"
-        assert all((x == -1) | (x == 1)), assert_string
-        """
-
         x = np.array(x)
         d = len(x) # dimensionality of data vector
-        n_qubits_ancilla = self.n_qubits(x) # qubits plus ancilla qubit if self.ancilla=True
+        n_qubits_ancilla = self.n_qubits(x, ancilla) # qubits plus ancilla qubit if self.ancilla=True
 
-        if self.ancilla == True:
+        if ancilla == True:
             n_qubits = n_qubits_ancilla - 1 # non ancilla qubits
         else:
             n_qubits = n_qubits_ancilla

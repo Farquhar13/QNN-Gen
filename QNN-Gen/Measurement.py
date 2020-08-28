@@ -23,15 +23,15 @@ class Measurement(ABC):
         self.rotate = rotate
 
     @abstractmethod
-    def output(circuit_output):
+    def output(counts):
         """
         Overwrite this method in dervided classes.
 
         Input:
-            - circuit_ouput: The result of running the circuit
+            - counts (dict): The result of running the circuit
 
         Returns:
-            - Transformation on the circuit_output to give the output of the model
+            - (np.ndarray): Model output after measurement tranformations
         """
         pass
 
@@ -94,10 +94,15 @@ class Measurement(ABC):
 
 
     @staticmethod
-    def counts_for_qubits(counts, qubits):
+    def counts_for_qubit_subset(counts, qubits, bit_strings, qubit_dict):
         """
+        counts_for_qubits() calls this function if the number of measured qubits is greater
+        than the length of the qubits argument. I.e. more qubits were measured than we are
+        interested in getting the counts for.
+
         Inputs:
-            - counts [dict]:
+            - counts [dict]: Dictionary with counts as values and corresponding measurement
+            results as keys.
             - qubits Union[list or int]: qubit index or list of qubit indices
 
         Returns:
@@ -109,7 +114,33 @@ class Measurement(ABC):
             Where the bit string is the state of qubit 4 (left) and qubit 0 (right), and the values
             are the counts.
         """
+        sorted_qubits = list(reversed(sorted(qubits)))
+        for key, value in counts.items():
+            # Look at only the revelant qubits
+            reverse_position = len(key) - 1
+            qubit_key = "".join([key[reverse_position - sq] for sq in sorted_qubits])
 
+            qubit_dict[qubit_key] += value
+
+        return qubit_dict
+
+    @staticmethod
+    def counts_for_qubits(counts, qubits):
+        """
+        Inputs:
+            - counts [dict]: Dictionary with counts as values and corresponding measurement
+            results as keys.
+            - qubits Union[list or int]: qubit index or list of qubit indices.
+
+        Returns:
+            - A dictionary with the keys being all possible bit strings corresponding to the sorted
+            qubit indices and values being the counts for the measument outcomes for those qubit results.
+
+        Example:
+            - qubits=[0, 4] would return a dictionary of {'00': a, '01': b, '10': c, '11': d}
+            Where the bit string is the state of qubit 4 (left) and qubit 0 (right), and the values
+            are the counts.
+        """
         if isinstance(qubits, int):
             qubits = [qubits]
 
@@ -120,13 +151,12 @@ class Measurement(ABC):
         for s in bit_strings:
             qubit_dict[s] = 0
 
-        sorted_qubits = list(reversed(sorted(qubits)))
+        n_measured_qubits = len(list(counts.keys())[0])
+        if n_measured_qubits > len(qubits):
+            return Measurement.counts_for_qubit_subset(counts, qubits,
+                                                       bit_strings, qubit_dict)
         for key, value in counts.items():
-            # Look at only the revelent qubits
-            reverse_position = len(key) - 1
-            qubit_key = "".join([key[reverse_position - sq] for sq in sorted_qubits])
-
-            qubit_dict[qubit_key] += value
+            qubit_dict[key] += value
 
         return qubit_dict
 
@@ -232,12 +262,12 @@ class Probability(Measurement):
     A class to transform circuit outputs into qubit probabilites.
     """
 
-    def __init__(self, qubits, p_zero=True, observable_basis=None):
+    def __init__(self, qubits, p_zero=True, observable=None):
         """
         Attributes:
-            - qubits Union[int, list, np.ndarray]: qubit index  or list of qubit indices
-            - observable_basis [Observable]: The observable corresponding the basis to measure in
-            - zero=True [Boolean]: If True, output returns probabilties of qubit being measured in the |0> state.
+            - qubits Union(int, list, np.ndarray): qubit index or list of qubit indices
+            - observable_basis (Observable): The observable corresponding the basis to measure in
+            - zero=True (Boolean): If True, output returns probabilties of qubit being measured in the |0> state.
             If false, output returns probabilties of qubit being measured in the |1> state.
         """
 
@@ -245,10 +275,9 @@ class Probability(Measurement):
             self.qubits = [qubits]
         else:
             self.qubits = qubits
-
         self.p_zero = p_zero
-
-        if observable_basis is not None:
+        self.observable = observable
+        if observable is not None:
             requires_rotation = True
         else:
             requires_rotation = False
@@ -256,16 +285,21 @@ class Probability(Measurement):
         super().__init__(qubits=self.qubits, rotate=requires_rotation)
 
 
-    def rotate_basis(self, circuit, qubit=None, observable_basis=None):
+    def rotate_basis(self, circuit, qubit=None, observable=None):
         """
-        Overwridding rotate_basis in Measurement
+        Call rotate basis in super class, Measurement. Modifies circuit in-place.
+        Uses attributes of self for optional arguments which are not provided.
+        Input:
+            - circuit (qiskit.QuantumCircuit)
+            - qubit=None (int or list)
+            - observable (QNN-Gen Observable)
         """
 
         if qubit is None:
             qubit = self.qubits
 
         if observable is None:
-            observable = self.observable_basis
+            observable = self.observable
 
         super().rotate_basis(circuit, qubit, observable)
 
@@ -273,7 +307,7 @@ class Probability(Measurement):
     def output(self, counts):
         """
         Input:
-            - counts [dict]:
+            - counts (dict):
 
         Returns:
             - A list (np.ndarray) of probabilities for each qubit.
@@ -288,6 +322,7 @@ class Probability(Measurement):
             qubit_counts = self.counts_for_qubits(counts, qubit)
             prob_dict = self.counts_to_probability(qubit_counts)
 
+            # Note: below might not be general enough for multi-qubit measurements
             if self.p_zero == True:
                 probability_list.append(prob_dict['0'])
             else:
@@ -298,7 +333,7 @@ class Probability(Measurement):
 
 class ProbabilityThreshold(Measurement):
     """
-    The output function uses threshold on probabilities of being in the zero state (if zero=True)
+    The output function uses a threshold on probabilities of being in the zero state (if zero=True)
     to return a binary classification result.
 
     E.g. If threshold=0.5 and the probability of the qubit being in the |0> state is >= 0.5 then
@@ -306,19 +341,19 @@ class ProbabilityThreshold(Measurement):
     being in the |0> state is < 0.5 then a label of [1] is returned by output() by default.
     """
 
-    def __init__(self, qubits, p_zero=True, threshold=0.5, labels=None, observable_basis=None,):
+    def __init__(self, qubits, p_zero=True, threshold=0.5, labels=None, observable=None,):
         """
         Attributes:
-        - qubits Union[int, list]: qubit index  or list of qubit indices
+        - qubits (int or list): qubit index  or list of qubit indices
 
-        - observable_basis [Observable]: The observable corresponding the basis to measure in
+        - observable (QNN-Gen Observable): The observable corresponding the basis to measure in
 
-        - p_zero=True [Boolean]: If True, output returns probabilties of qubit being measured in the |0> state.
+        - p_zero=True (Boolean): If True, output returns probabilties of qubit being measured in the |0> state.
         If false, output returns probabilties of qubit being measured in the |1> state.
 
-        - threshold=0.5 [float]: For binary classification. Should be between 0 and 1.
+        - threshold=0.5 (float): For binary classification. Should be between 0 and 1.
 
-        - labels=None Union[list, np.ndarray]: The lables to return from output. A 2 element list. labels[0] is the label
+        - labels=None (np.ndarray): The lables to return from output. A 2 element list. labels[0] is the label
         corresponding to a probability that execedes the threshold, labels[1] corresponds to the probability
         being
         """
@@ -329,7 +364,6 @@ class ProbabilityThreshold(Measurement):
             self.qubits = qubits
 
         self.p_zero = p_zero
-        self.observable_basis = observable_basis
         self.threshold = threshold
 
         if labels is None:
@@ -340,7 +374,8 @@ class ProbabilityThreshold(Measurement):
         else:
             self.labels = labels
 
-        if observable_basis is not None:
+        self.observable = observable
+        if observable is not None:
             requires_rotation = True
         else:
             requires_rotation = False
@@ -348,24 +383,33 @@ class ProbabilityThreshold(Measurement):
         super().__init__(qubits=self.qubits, rotate=requires_rotation)
 
 
-    def rotate_basis(self, circuit, qubit=None, observable_basis=None):
+    def rotate_basis(self, circuit, qubit=None, observable=None):
         """
-        Overwridding rotate_basis in Measurement
+        Call rotate basis in super class, Measurement. Modifies circuit in-place.
+        Uses attributes of self for optional arguments which are not provided.
+        Input:
+            - circuit (qiskit.QuantumCircuit)
+            - qubit=None (int or list)
+            - observable (QNN-Gen Observable)
         """
-
         if qubit is None:
             qubit = self.qubits
 
         if observable is None:
-            observable = self.observable_basis
+            observable = self.observable
 
         super().rotate_basis(circuit, qubit, observable)
 
 
     def output(self, counts):
-        prob = Probability(self.qubits, self.p_zero, self.observable_basis)
+        """
+        Input:
+            - counts (dict):
+        Returns:
+            - (np.ndarray): The element of self.label corresponding to the outcome after thresholding
+        """
+        prob = Probability(self.qubits, self.p_zero, self.observable)
         prob_vec = prob.output(counts)
-        print(prob_vec)
         threshold_vec = prob_vec >= self.threshold # a boolean vector
         labels = np.where(threshold_vec, self.labels[0], self.labels[1]) # labels[0] where true
 
@@ -377,10 +421,11 @@ class Expectation(Measurement):
     A class to assist in computing expectation values. Currently for one qubit expectation.
     """
 
-    def __init__(self, qubits, observable):
+    def __init__(self, qubits, observable=Observable.Z()):
         """
-        - qubit [int]: The index of the qubit
-        - observable Union[matrix, tuple, or Observable object]:
+        - qubit (int): The index of the qubit
+        - observable=Observable.Z() (matrix, tuple, or QNN-Gen Observable object): The observable
+        to meausre with respect to
             - If matrix it should be a list or numpy.ndarray
             - If tuple, it should be of the form ("name": matrix)
         """
@@ -423,6 +468,12 @@ class Expectation(Measurement):
         super().rotate_basis(circuit, qubit, observable)
 
     def output(self, counts):
+        """
+        Input:
+            - counts (dict):
+        Returns:
+            - (np.ndarray):
+        """
         # Convert to probability
         qubit_counts = self.counts_for_qubits(counts, self.qubits)
         prob_dict = self.counts_to_probability(qubit_counts)
@@ -434,4 +485,4 @@ class Expectation(Measurement):
 
         probs = np.array([prob for (key, prob) in sorted_prob_tuple])
 
-        return np.dot(self.observable.eigenvalues, probs)
+        return np.array([np.dot(self.observable.eigenvalues, probs)])

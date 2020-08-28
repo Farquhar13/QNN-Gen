@@ -8,7 +8,6 @@ import qiskit
 import numpy as np
 from Utility import Gate
 
-
 class Model(ABC):
     """
     Class to define a QML model, whether it be a particular ansatz or a perceptron model.
@@ -99,7 +98,10 @@ class TreeTensorNetwork(Model):
             self._n_qubits = None
             return
 
-        assert np.log2(n_qubits) % 1 == 0, "Assumes n_qubits is a power of two."
+        if np.log2(n_qubits) % 1 != 0:
+            import warnings
+            warnings.warn("TTN assumes n_qubits is a power of two.")
+
         self._n_qubits = n_qubits
 
         self.n_layers = int(np.log2(n_qubits))
@@ -234,7 +236,7 @@ class BinaryPerceptron(Model):
             self._n_qubits = None
             return
 
-        n_qubits -= 1 # Not counting ancilla
+        #n_qubits -= 1 # Not counting ancilla
         assert np.log2(n_qubits) % 1 == 0, "Assumes n_qubits is a power of two."
         self._n_qubits = n_qubits
 
