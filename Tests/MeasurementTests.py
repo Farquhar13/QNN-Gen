@@ -228,6 +228,26 @@ class TestMeasurement(unittest.TestCase):
         result = prob.output(counts)
         self.assertTrue(isclose(0.5, result[0], abs_tol=5e-2))
 
+    def test_probability4(self):
+        """ Test multi-qubit measurment """
+        qc = qiskit.QuantumCircuit(3)
+        prob = Probability([0, 2])
+
+        Measurement.add_measurements(qc, [0, 2])
+        counts = Utility.get_counts(qc, measure_all=False)
+        result = prob.output(counts)
+        expected = [1, 1]
+        self.assertTrue(np.allclose(result, expected))
+
+    def test_probability5(self):
+        """ Test multi-qubit measurment on a subset of measured qubits """
+        qc = qiskit.QuantumCircuit(3)
+        prob = Probability([0, 2])
+        counts = Utility.get_counts(qc, measure_all=True)
+        result = prob.output(counts)
+        expected = [1, 1]
+        self.assertTrue(np.allclose(result, expected))
+
     def test_probability_threshold1(self):
         qc = qiskit.QuantumCircuit(1)
         counts = Utility.get_counts(qc)
@@ -312,6 +332,7 @@ class TestMeasurement(unittest.TestCase):
         result = exp.output(counts)
         expected = [1]
         is_correct = (result == expected)
+
 
 if __name__ == "__main__":
     unittest.main()
