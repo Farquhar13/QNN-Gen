@@ -4,10 +4,10 @@ import sys
 sys.path.append('../QNN-Gen/')
 import numpy as np
 import qiskit
-from Measurement import *
-import Utility
+from qnn_gen.measurement import *
+from qnn_gen import utility
 from math import isclose
-from Observable import Observable
+from qnn_gen.observable import Observable
 
 class TestMeasurement(unittest.TestCase):
 
@@ -21,7 +21,7 @@ class TestMeasurement(unittest.TestCase):
         self.assertTrue(np.allclose(probs, expected))
 
     def test_statevector_to_probability_dict(self):
-        psi = np.array([1j,0,0,1j]) * 1/np.sqrt(2)
+        psi = np.array([1j, 0, 0, 1j]) * 1/np.sqrt(2)
         probs_dict = Measurement.statevector_to_probability_dict(psi)
         bit_strings = Measurement.get_bit_strings(2)
         probs = [probs_dict[bit_string] for bit_string in bit_strings]
@@ -34,7 +34,7 @@ class TestMeasurement(unittest.TestCase):
         qc.x(0)
         qc.y(1)
         qc.z(2)
-        counts = Utility.get_counts(qc)
+        counts = utility.get_counts(qc)
 
         meas_counts = Measurement.counts_to_probability(counts)
 
@@ -48,7 +48,7 @@ class TestMeasurement(unittest.TestCase):
         qc.x(0)
         qc.y(1)
         qc.z(2)
-        counts = Utility.get_counts(qc)
+        counts = utility.get_counts(qc)
 
         qubits = [1, 2]
         qubit_counts = Measurement.counts_for_qubits(counts, qubits)
@@ -64,7 +64,7 @@ class TestMeasurement(unittest.TestCase):
         qc.x(0)
 
         Measurement.add_measurements(qc, [0])
-        counts = Utility.get_counts(qc, measure_all=False)
+        counts = utility.get_counts(qc, measure_all=False)
         self.assertTrue(counts['1'] == 1024)
 
     def test_add_measurements2(self):
@@ -75,7 +75,7 @@ class TestMeasurement(unittest.TestCase):
         qc.measure(0, 0)
 
         Measurement.add_measurements(qc, [1])
-        counts = Utility.get_counts(qc, measure_all=False)
+        counts = utility.get_counts(qc, measure_all=False)
         self.assertTrue(counts['1 0'] == 1024) # space separates different classical registers
 
     def test_add_measurements3(self):
@@ -84,7 +84,7 @@ class TestMeasurement(unittest.TestCase):
         qc.x(0)
 
         Measurement.add_measurements(qc, [0, 1], [1, 0])
-        counts = Utility.get_counts(qc, measure_all=False)
+        counts = utility.get_counts(qc, measure_all=False)
         self.assertTrue(counts['10'] == 1024)
 
     def test_add_measurements4(self):
@@ -93,7 +93,7 @@ class TestMeasurement(unittest.TestCase):
         qc.x(0)
 
         Measurement.add_measurements(qc, [0], [0], add_classical_register=False)
-        counts = Utility.get_counts(qc, measure_all=False)
+        counts = utility.get_counts(qc, measure_all=False)
         self.assertTrue(counts['1'] == 1024)
 
     def test_rotate_basis1(self):
@@ -101,7 +101,7 @@ class TestMeasurement(unittest.TestCase):
         qc = qiskit.QuantumCircuit(1)
         Z = Observable.Z()
         Measurement.rotate_basis(qc, [0], Z)
-        sv = Utility.get_state_vector(qc)
+        sv = utility.get_state_vector(qc)
         self.assertTrue(np.allclose([1, 0], sv))
 
     def test_rotate_basis2(self):
@@ -110,13 +110,13 @@ class TestMeasurement(unittest.TestCase):
         qc.h(0) # Rotate onto eigenvector of x w/ e.value 1
         X = Observable.X()
         Measurement.rotate_basis(qc, [0], X)
-        sv = Utility.get_state_vector(qc)
+        sv = utility.get_state_vector(qc)
 
         qc1 = qiskit.QuantumCircuit(1)
         qc1.x(0)
         qc1.h(0) # Rotate onto eigenvector of x with e.value -1
         Measurement.rotate_basis(qc1, [0], X)
-        sv1 = Utility.get_state_vector(qc1)
+        sv1 = utility.get_state_vector(qc1)
         result = np.allclose([1, 0], sv) and np.allclose([0, 1], sv1)
         self.assertTrue(result)
 
@@ -126,12 +126,12 @@ class TestMeasurement(unittest.TestCase):
         qc.rx(-np.pi/2, 0) # Rotate onto y axis
         Y = Observable.Y()
         Measurement.rotate_basis(qc, [0], Y)
-        sv = Utility.get_state_vector(qc)
+        sv = utility.get_state_vector(qc)
 
         qc1 = qiskit.QuantumCircuit(1)
         qc1.rx(np.pi/2, 0) # Rotate onto negative y axis
         Measurement.rotate_basis(qc1, [0], Y)
-        sv1 = Utility.get_state_vector(qc1)
+        sv1 = utility.get_state_vector(qc1)
 
         result = np.allclose([1, 0], sv) and np.allclose([0, 1], sv1)
         self.assertTrue(result)
@@ -145,12 +145,12 @@ class TestMeasurement(unittest.TestCase):
         H = Observable.H()
         qc.initialize(H.eigenvectors[0], [0])
         Measurement.rotate_basis(qc, [0], H)
-        sv = Utility.get_state_vector(qc)
+        sv = utility.get_state_vector(qc)
 
         qc1 = qiskit.QuantumCircuit(1)
         qc1.initialize(H.eigenvectors[1], [0])
         Measurement.rotate_basis(qc1, [0], H)
-        sv1 = Utility.get_state_vector(qc1)
+        sv1 = utility.get_state_vector(qc1)
         result = np.allclose([1, 0], sv) and (np.allclose([0, 1], sv1))
         self.assertTrue(result)
 
@@ -163,13 +163,13 @@ class TestMeasurement(unittest.TestCase):
         qc = qiskit.QuantumCircuit(1)
         qc.h(0)
         Measurement.rotate_basis(qc, [0], X_obs)
-        sv = Utility.get_state_vector(qc)
+        sv = utility.get_state_vector(qc)
 
         qc1 = qiskit.QuantumCircuit(1)
         qc1.x(0)
         qc1.h(0) # Rotate onto eigenvector of x with e.value -1
         Measurement.rotate_basis(qc1, [0], X_obs)
-        sv1 = Utility.get_state_vector(qc1)
+        sv1 = utility.get_state_vector(qc1)
 
         expected = np.allclose(Measurement.born_rule(sv[0]), 1)
         expected1 = np.allclose(Measurement.born_rule(sv1[1]), 1)
@@ -183,12 +183,12 @@ class TestMeasurement(unittest.TestCase):
         qc = qiskit.QuantumCircuit(1)
         qc.rx(-np.pi/2, [0])
         Measurement.rotate_basis(qc, [0], Y_obs)
-        sv = Utility.get_state_vector(qc)
+        sv = utility.get_state_vector(qc)
 
         qc1 = qiskit.QuantumCircuit(1)
         qc1.rx(np.pi/2, 0) # Rotate onto negative y axis
         Measurement.rotate_basis(qc1, [0], Y_obs)
-        sv1 = Utility.get_state_vector(qc1)
+        sv1 = utility.get_state_vector(qc1)
 
         expected = np.allclose(Measurement.born_rule(sv[0]), 1)
         expected1 = np.allclose(Measurement.born_rule(sv1[1]), 1)
@@ -200,7 +200,7 @@ class TestMeasurement(unittest.TestCase):
         qc.h(0)
 
         Measurement.add_measurements(qc, [0])
-        counts = Utility.get_counts(qc, measure_all=False)
+        counts = utility.get_counts(qc, measure_all=False)
 
         Prob = Probability(0)
         result = Prob.output(counts)
@@ -212,7 +212,7 @@ class TestMeasurement(unittest.TestCase):
         qc.x(0)
 
         Measurement.add_measurements(qc, [0])
-        counts = Utility.get_counts(qc, measure_all=False)
+        counts = utility.get_counts(qc, measure_all=False)
 
         Prob = Probability([0], p_zero=False)
         result = Prob.output(counts)
@@ -224,7 +224,7 @@ class TestMeasurement(unittest.TestCase):
         X_obs = Observable.X()
         prob = Probability([0], observable=X_obs)
         prob.rotate_basis(qc)
-        counts = Utility.get_counts(qc)
+        counts = utility.get_counts(qc)
         result = prob.output(counts)
         self.assertTrue(isclose(0.5, result[0], abs_tol=5e-2))
 
@@ -234,7 +234,7 @@ class TestMeasurement(unittest.TestCase):
         prob = Probability([0, 2])
 
         Measurement.add_measurements(qc, [0, 2])
-        counts = Utility.get_counts(qc, measure_all=False)
+        counts = utility.get_counts(qc, measure_all=False)
         result = prob.output(counts)
         expected = [1, 1]
         self.assertTrue(np.allclose(result, expected))
@@ -243,14 +243,14 @@ class TestMeasurement(unittest.TestCase):
         """ Test multi-qubit measurment on a subset of measured qubits """
         qc = qiskit.QuantumCircuit(3)
         prob = Probability([0, 2])
-        counts = Utility.get_counts(qc, measure_all=True)
+        counts = utility.get_counts(qc, measure_all=True)
         result = prob.output(counts)
         expected = [1, 1]
         self.assertTrue(np.allclose(result, expected))
 
     def test_probability_threshold1(self):
         qc = qiskit.QuantumCircuit(1)
-        counts = Utility.get_counts(qc)
+        counts = utility.get_counts(qc)
         pt = ProbabilityThreshold(0)
         result = pt.output(counts)
         self.assertTrue(result[0] == 0)
@@ -258,7 +258,7 @@ class TestMeasurement(unittest.TestCase):
     def test_probability_threshold2(self):
         """ p_zero=False w/ labels """
         qc = qiskit.QuantumCircuit(1)
-        counts = Utility.get_counts(qc)
+        counts = utility.get_counts(qc)
         pt = ProbabilityThreshold(0, p_zero=False, labels=['a', 'b'])
         result = pt.output(counts)
         self.assertTrue(result[0] == 'b')
@@ -267,7 +267,7 @@ class TestMeasurement(unittest.TestCase):
         """ threshold """
         qc = qiskit.QuantumCircuit(1)
         qc.h(0)
-        counts = Utility.get_counts(qc)
+        counts = utility.get_counts(qc)
         pt = ProbabilityThreshold(0, threshold=0.75)
         result = pt.output(counts)
         self.assertTrue(result[0] == 1)
@@ -280,7 +280,7 @@ class TestMeasurement(unittest.TestCase):
         X_obs = Observable.X()
         pt = ProbabilityThreshold(0, observable=X_obs)
         pt.rotate_basis(qc)
-        counts = Utility.get_counts(qc)
+        counts = utility.get_counts(qc)
         result = pt.output(counts)
         self.assertTrue(result[0] == 1)
 
@@ -288,14 +288,14 @@ class TestMeasurement(unittest.TestCase):
         """ Z """
         qc = qiskit.QuantumCircuit(1)
         exp = Expectation(0)
-        counts = Utility.get_counts(qc)
+        counts = utility.get_counts(qc)
         result = exp.output(counts)
         expected = [1]
         is_correct = (result == expected)
 
         qc1 = qiskit.QuantumCircuit(1)
         qc1.x(0)
-        counts1 = Utility.get_counts(qc1)
+        counts1 = utility.get_counts(qc1)
         result1 = exp.output(counts1)
         expected1 = [-1]
         is_correct1 = (result1 == expected1)
@@ -308,7 +308,7 @@ class TestMeasurement(unittest.TestCase):
         Y_obs = Observable.Y()
         exp = Expectation(0, observable=Y_obs)
         exp.rotate_basis(qc)
-        counts = Utility.get_counts(qc)
+        counts = utility.get_counts(qc)
         result = exp.output(counts)
         expected = [1]
         is_correct = (result == expected)
@@ -316,7 +316,7 @@ class TestMeasurement(unittest.TestCase):
         qc1 = qiskit.QuantumCircuit(1)
         qc1.rx(np.pi/2, 0)
         exp.rotate_basis(qc1)
-        counts1 = Utility.get_counts(qc1)
+        counts1 = utility.get_counts(qc1)
         result1 = exp.output(counts1)
         expected1 = [-1]
         is_correct1 = (result1 == expected1)
@@ -328,7 +328,7 @@ class TestMeasurement(unittest.TestCase):
         qc.h(0)
         exp = Expectation(1)
         exp.rotate_basis(qc)
-        counts = Utility.get_counts(qc)
+        counts = utility.get_counts(qc)
         result = exp.output(counts)
         expected = [1]
         is_correct = (result == expected)
