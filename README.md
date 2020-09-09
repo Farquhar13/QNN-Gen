@@ -19,7 +19,7 @@ pip install -e .
 ```
 
 ### Design
-QNN-Gen is designed to serve as a useful abstraction for understanding and implementing Quantum Neural Networks (QNNs) or Parameterized Quatum Circuits. The structure of the code is classes is intended to mirror the structure of QNNs. The choices one has to make when constructing a QNN is reflected in QNN-Gen through the use of particular classes and their attributes. 
+QNN-Gen is designed to serve as a useful abstraction for understanding and implementing Quantum Neural Networks (QNNs) or Parameterized Quatum Circuits. The structure of the code is classes is intended to mirror the theoretical structure of QNNs. The choices one has to make when constructing a QNN is reflected in QNN-Gen through the use of particular classes and their attributes. 
 
 Furthermore, QNN-Gen is designed to balance both ease-of-use and configurability.
 
@@ -29,7 +29,7 @@ We use a high-level abstraction of QNNs to break them down into three main steps
 - Choice of model architecture or ansatz
 - Measurement and post-processing
 
-We designed QNN-Gen to match this abstraction in code with the abstract base classes `Encode`, `Model`, and `Measurement`. Respectively, in the `encode.py`, `model.py`, and `measurement.py` functions you can find these abstract base classes as well as several derived classes. To construct a QNN, you simply need to make your choices of modeling decisions and instantiate the corresponding derived classes.
+QNN-Gen matches this abstraction in code with the abstract base classes `Encode`, `Model`, and `Measurement`. Respectively, in the `encode.py`, `model.py`, and `measurement.py` files you can find these abstract base classes as well as several derived classes. To construct a QNN, you simply need to make your choices of modeling decisions and instantiate the corresponding derived classes.
 
 ### Examples
 We strive to make QNN-Gen as easy-to-use as possible. From the code snippet below you can see that it requires only 3 lines of code using QNN-Gen to create a simple QNN.
@@ -73,6 +73,7 @@ X = np.array([[1, 0, 0, 0],
 predictions = qg.run(X, encoder, model, measurement)
 ```
 Which will produce a numpy array with 5-elements corresponding to the predictions for the 5 input data points. For this initatiations of the model parameters:
+
 ![](/images/BasisEncode_TTN_predictions.png)
 
 For more examples, checkout the `examples/` folder. Inside, you will find python files and jupyter notebooks which demonstrate both the ease-of-use and configurability of QNN-Gen.
