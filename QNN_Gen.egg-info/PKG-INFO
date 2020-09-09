@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: QNN-Gen
+Version: 0.0.13
+Summary: A framework for quantum neural networks.
+Home-page: https://github.com/farquhar13/QNN-Gen
+Author: Collin Farquhar
+Author-email: Farquhar13@gmail.com
+License: UNKNOWN
+Description: # QNN-Gen
+        Beta coming soon.
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
