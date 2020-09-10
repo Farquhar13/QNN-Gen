@@ -18,6 +18,9 @@ cd QNN-Gen
 pip install -e . 
 ```
 
+### Paper
+For a detailed description, take a look at the pdf in the root directory of the repository titled `QNN-Gen_paper.pdf`.
+
 ### Design
 QNN-Gen is designed to serve as a useful abstraction for understanding and implementing Quantum Neural Networks (QNNs) or Parameterized Quatum Circuits. The structure of the code is classes is intended to mirror the theoretical structure of QNNs. The choices one has to make when constructing a QNN is reflected in QNN-Gen through the use of particular classes and their attributes. 
 
