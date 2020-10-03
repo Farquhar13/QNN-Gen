@@ -12,8 +12,8 @@ class Model(ABC):
     """
     Class to define a QML model, whether it be a particular ansatz or a perceptron model.
 
-    Abstract class. Derived classes overwrite circuit() and default_measuremnt(). Derived classes should
-    also have a self.params attribute.
+    Abstract class. Derived classes overwrite circuit() and may overwrite default_measuremnt().
+    Derived classes should ensure that the self.n_qubits and self.parameters attributes are updated.
     """
 
     def __init__(self):
