@@ -1,1 +1,1 @@
-qnn-gen
+qnn_gen
