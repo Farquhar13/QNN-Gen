@@ -136,5 +136,7 @@ class Gate:
 
     RXX = lambda theta : qiskit.circuit.library.standard_gates.RXXGate(theta)
     RZX = lambda theta : qiskit.circuit.library.standard_gates.RZXGate(theta)
+    RZZ = lambda theta : qiskit.circuit.library.standard_gates.RZZGate(theta)
+    RYY = lambda theta : qiskit.circuit.library.standard_gates.RYYGate(theta)
 
     swap = qiskit.circuit.library.standard_gates.SwapGate()
