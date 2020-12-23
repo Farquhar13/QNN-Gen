@@ -265,7 +265,7 @@ class Probability(Measurement):
     def __init__(self, qubits, p_zero=True, observable=None):
         """
         Attributes:
-            - qubits Union(int, list, np.ndarray): qubit index or list of qubit indices
+            - qubits (int, list, np.ndarray): qubit index or list of qubit indices
             - observable_basis (Observable): The observable corresponding the basis to measure in
             - zero=True (Boolean): If True, output returns probabilties of qubit being measured in the |0> state.
             If false, output returns probabilties of qubit being measured in the |1> state.
@@ -351,11 +351,11 @@ class ProbabilityThreshold(Measurement):
         - p_zero=True (Boolean): If True, output returns probabilties of qubit being measured in the |0> state.
         If false, output returns probabilties of qubit being measured in the |1> state.
 
-        - threshold=0.5 (float): For binary classification. Should be between 0 and 1.
+        - threshold=0.5 (float): Threshold value between 0 and 1.
 
         - labels=None (np.ndarray): The lables to return from output. A 2 element list. labels[0] is the label
         corresponding to a probability that execedes the threshold, labels[1] corresponds to the probability
-        being
+        being below the threshold.
         """
 
         if isinstance(qubits, int):

@@ -74,7 +74,6 @@ class TreeTensorNetwork(Model):
         self.n_layers = None
         self.measurement_qubit = None
         self.parameters = angles
-        print(self.parameters)
         if isinstance(self.parameters, (list, np.ndarray)):
             self.n_parameters = len(self.parameters)
         else:

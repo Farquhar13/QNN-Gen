@@ -13,7 +13,7 @@ from qnn_gen.combine_run import run
 import numpy as np
 import qiskit
 
-class Testencode(unittest.TestCase):
+class TestCombineRun(unittest.TestCase):
 
     def test_combine1(self):
         x = np.array([1, 0, 0, 0, 0, 0, 0, 1])
